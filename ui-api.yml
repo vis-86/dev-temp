@@ -1,0 +1,953 @@
+openapi: 3.0.0
+info:
+  version: "1.0"
+  x-logo:
+    url: logo.png
+    backgroundColor: "#1B1537"
+    altText: SBP logo
+  description: |
+    # Общая информация
+
+    Описание API произведено в формате **Swagger 2.0**.
+
+    Вы можете использовать данный файл для ознакомления с методами API, а также
+    для генерации базового кода для работы с API на удобном для вас языке программирования с помощью
+    утилиты:
+    [**Swagger Codegen**](https://swagger.io/swagger-codegen/) или online
+    сервиса [**Swagger Editor**](https://editor.swagger.io/).
+
+    HTTP-код | Описание
+    ----------------------|-------------
+    200 | Успешный ответ.
+    201 | Операция успешно выполнена.
+    400 | Неправильный запрос. Статус выдается из-за нарушения формата или допустимых значений параметров запроса.
+    404 | Ресурс не найден.
+    422 | Некорректное значение параметра запроса.
+    500 | Внутренняя ошибка. Повторите запрос позднее.
+
+    ## История изменений
+
+    Дата | Описание изменений
+    ----------------|-------------
+    04 ДЕКАБРЬ 2020 | Запуск API
+
+  title: Внутреннтй API для UI "SBP GATE"
+tags:
+  - name: LegalEntity
+    x-displayName: Управление юридическими лицами
+    description: |
+      Методы API для регистрации в СБП Юридических лиц.
+  - name: LegalAccount
+    x-displayName: Управление расчетными счетами юридических лиц
+    description: >
+      Методы API для регистрации в СБП расчетных счетов юридических лиц и ИП,
+      куда будут переводиться деньги за совершенные операции в их ТСП.
+  - name: Merchant
+    x-displayName: Управление ТСП
+    description: >
+      Методы API для регистрации в СБП ТСП. Доступны
+      только по сертификатам Агентов ТСП.
+x-tagGroups:
+  - name: MerchantApi
+    tags:
+      - LegalEntity
+      - LegalAccount
+      - Merchant
+paths:
+  /api/v1/legal-entity:
+    post:
+      tags:
+        - LegalEntity
+      summary: Регистрация юридического лица
+      operationId: createLegalEntity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LegalEntityDto"
+        description: Данные регистрируемого юридического лица
+        required: true
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegalEntityResultOk"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+  /api/v1/legal-entity/list:
+    get:
+      tags:
+        - LegalEntity
+      summary: Получение списка юридических лиц
+      operationId: listOfLegalEntity
+      parameters:
+        - $ref: '#/components/parameters/agentIdParam'
+        - $ref: '#/components/parameters/offsetParam'
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/sortParam'
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegalList"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+  "/api/v1/legal-entity/registration/{internalLegalEntityId}":
+    get:
+      tags:
+        - LegalEntity
+      summary: Запрос статуса регистрации юридического лица
+      operationId: getStatusLegalEntity
+      parameters:
+        - name: internalLegalEntityId
+          in: path
+          description: Внутренний идентификатор ЮЛ
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegalTicketResultOk"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+  "/api/v1/legal-entity/registration/list":
+    get:
+      tags:
+        - LegalEntity
+      summary: Запрос статуса регистрации юридического лица
+      operationId: getStatusLegalEntityList
+      parameters:
+        - $ref: '#/components/parameters/agentIdParam'
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegalTicketResultList"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+  "/api/v1/legal-entity/info/{internalLegalEntityId}":
+    get:
+      tags:
+        - LegalEntity
+      summary: Запрос данных юридического лица
+      description: >
+        Доступен по сертификатам Агента ТСП и Участника
+        СБП.
+      operationId: getLegalData
+      parameters:
+        - name: internalLegalEntityId
+          in: path
+          description: Внутренний идентификатор ЮЛ
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegalDataResultOk"
+        "400":
+          description: Юридическое лицо с указанным идентификатором не найдено
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+  /api/v1/legal-account:
+    post:
+      tags:
+        - LegalAccount
+      summary: Регистрация расчетного счета юридического лица
+      operationId: createLegalAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LegalAccountDto"
+        description: Данные регистрируемого банковского счета
+        required: true
+      responses:
+        "201":
+          description: Операция успешно выполнена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegalAccountResultOk"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+        "422":
+          description: Некорректное значение параметра запроса
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegalAccountResultBad"
+  "/api/v1/legal-account/list/{internalLegalEntityId}":
+    get:
+      tags:
+        - LegalAccount
+      summary: Запрос списка банковских счетов для юр. лица
+      operationId: getLegalAccountList
+      parameters:
+        - $ref: '#/components/parameters/internalLegalEntityIdParam'
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegalAccountList"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+  /api/v1/merchant:
+    post:
+      tags:
+        - Merchant
+      summary: Регистрация ТСП
+      operationId: createMerchant
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MerchantDto"
+        description: Данные регистрируемого ТСП
+        required: true
+      responses:
+        "201":
+          description: Операция успешно выполнена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MerchantResultOk"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+        "422":
+          description: Некорректное значение параметра запроса
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MerchantResultBad"
+  "/api/v1/merchant/info/{internalMerchantId}":
+    get:
+      tags:
+        - Merchant
+      summary: Запрос данных ТСП
+      description: >
+        Доступен по сертификатам Агента ТСП и Участника
+        СБП.
+      operationId: getMerchantData
+      parameters:
+        - name: internalMerchantId
+          in: path
+          description: Внутренний идентификатор ТСП в СБП
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MerchantDataResultOk"
+        "400":
+          description: Юридическое лицо с указанным идентификатором не найдено
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+  "/api/v1/merchant/list/{internalLegalEntityId}":
+    get:
+      tags:
+        - Merchant
+      summary: Запрос списка ТСП для юр. лица
+      operationId: getMerchantList
+      parameters:
+        - $ref: '#/components/parameters/internalLegalEntityIdParam'
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MerchantList"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+components:
+  schemas:
+    LegalEntityDto:
+      type: object
+      properties:
+        agentId:
+          type: string
+          minLength: 12
+          maxLength: 12
+          description: Идентификатор агента
+          example: A00000000001
+        ogrn:
+          type: string
+          minLength: 13
+          maxLength: 15
+          description: ОГРН
+          example: "1147746831352"
+      required:
+        - agentId
+        - ogrn
+      title: Данные регистрируемого юридического лица
+    LegalEntityResultOk:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Код ответа
+          maxLength: 7
+          example: RM00000
+        message:
+          type: string
+          description: Описание кода ответа
+          maxLength: 255
+          example: Запрос обработан успешно
+        data:
+          $ref: "#/components/schemas/LegalEntityResultData"
+      required:
+        - code
+        - message
+        - data
+      title: Успешный ответ на запрос регистрации юр.лица
+    LegalEntityResultData:
+      type: object
+      properties:
+        internalLegalEntityId:
+          type: integer
+          format: int32
+          description: Внутренний идентификатор ЮЛ
+        ticketId:
+          type: string
+          description: Временный регистрационный номер
+          minLength: 32
+          maxLength: 32
+          example: b5ffebc7ee9b4c3bb8865eaec4e6ab05
+      required:
+        - ticketId
+      title: Ответ на запрос регистрации юр.лица (блок data)
+    LegalTicketResultOk:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Код ответа на запрос
+          maxLength: 7
+          example: RM00000
+        message:
+          type: string
+          description: Описание кода ответа на запрос
+          maxLength: 255
+          example: Запрос обработан успешно
+        data:
+          $ref: "#/components/schemas/LegalTicketResultData"
+      required:
+        - code
+        - message
+        - data
+      title: Запрос на регистрацию ЮЛ и ИП успешно обработан
+    LegalTicketResultList:
+      type: array
+      items:
+        $ref: "#/components/schemas/TicketResultData"
+      title: Получение списка запросов на регистрацию юр. лица
+    LegalList:
+      type: array
+      items:
+        $ref: "#/components/schemas/LegalListResultData"
+      title: Получение списка ЮЛ
+    LegalDataResultOk:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Код ответа на запрос
+          maxLength: 7
+          example: RM00000
+        data:
+          $ref: "#/components/schemas/LegalEntityData"
+        message:
+          type: string
+          description: Описание кода ответа на запрос
+          maxLength: 255
+          example: Запрос обработан успешно
+      required:
+        - code
+        - data
+        - message
+      title: Успешный ответ на запрос данных юридического лица
+    MerchantDataResultOk:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Код ответа на запрос
+          maxLength: 7
+          example: RM00000
+        data:
+          $ref: "#/components/schemas/MerchantShortDto"
+        message:
+          type: string
+          description: Описание кода ответа на запрос
+          maxLength: 255
+          example: Запрос обработан успешно
+      required:
+        - code
+        - data
+        - message
+      title: Успешный ответ на запрос данных юридического лица
+    MerchantList:
+      type: array
+      items:
+        $ref: "#/components/schemas/MerchantForList"
+      title: Получение списка запросов на регистрацию юр. лица
+    TicketResultData:
+      type: object
+      properties:
+        internalLegalEntityId:
+          type: integer
+          format: int32
+          description: Внутренний идентификатор ЮЛ
+        ticketId:
+          type: string
+          description: Временный регистрационный номер
+          minLength: 32
+          maxLength: 32
+          example: b5ffebc7ee9b4c3bb8865eaec4e6ab05
+        status:
+          type: string
+          description: Статус регистрации юридического лица
+          enum:
+            - IN_PROCESS
+            - CREATED
+            - ERROR
+          example: CREATED
+        code:
+          type: string
+          description: Код ответа на результат регистрации юридического лица
+          maxLength: 7
+          example: RM00000
+        message:
+          type: string
+          description: Описание кода ответа на результат регистрации юридического лица
+          maxLength: 255
+          example: Запрос обработан успешно
+        ogrn:
+          type: string
+          description: Основной государственный регистрационный номер
+          minLength: 12
+          maxLength: 15
+          example: "1147746831352"
+      required:
+        - status
+        - ticketId
+      title: Информация о запросе статуса регистрации юр.лица
+    LegalTicketResultData:
+      type: object
+      properties:
+        internalLegalEntityId:
+          type: integer
+          format: int32
+          description: Внутренний идентификатор ЮЛ
+        legalId:
+          type: string
+          description: Идентификатор зарегистрированного юридического лица в СБП
+          minLength: 12
+          maxLength: 12
+          example: LF0000000001
+        status:
+          type: string
+          description: Статус регистрации юридического лица
+          enum:
+            - IN_PROCESS
+            - CREATED
+            - ERROR
+          example: CREATED
+        code:
+          type: string
+          description: Код ответа на результат регистрации юридического лица
+          maxLength: 7
+          example: RM00000
+        message:
+          type: string
+          description: Описание кода ответа на результат регистрации юридического лица
+          maxLength: 255
+          example: Запрос обработан успешно
+        legalEntity:
+          $ref: "#/components/schemas/LegalEntityData"
+      required:
+        - status
+      title: Ответ на запрос статуса регистрации юр.лица при успешной регистрации
+    LegalListResultData:
+      type: object
+      properties:
+        internalLegalEntityId:
+          type: integer
+          format: int32
+          description: Внутренний идентификатор ЮЛ
+          example: 123123123
+        legalId:
+          type: string
+          description: Идентификатор зарегистрированного юридического лица в СБП
+          minLength: 12
+          maxLength: 12
+          example: LF0000000001
+        ogrn:
+          type: string
+          description: Основной государственный регистрационный номер
+          minLength: 12
+          maxLength: 15
+          example: "1147746831352"
+        status:
+          type: string
+          description: Статус регистрации юридического лица
+          enum:
+            - IN_PROCESS
+            - CREATED
+            - ERROR
+          example: CREATED
+        message:
+          type: string
+          description: Описание кода ответа на результат регистрации юридического лица
+          maxLength: 255
+          example: Запрос обработан успешно
+        legalEntity:
+          $ref: "#/components/schemas/LegalEntityData"
+      required:
+        - status
+        - id
+        - legalId
+        - ogrn
+      title: Ответ на запрос статуса регистрации юр.лица при успешной регистрации
+    LegalEntityData:
+      type: object
+      properties:
+        internalLegalEntityId:
+          type: integer
+          format: int32
+          description: Внутренний идентификатор ЮЛ
+        agentId:
+          type: string
+          minLength: 12
+          maxLength: 12
+          description: Идентификатор агента
+          example: A00000000001
+        name:
+          type: string
+          description: Сокращенное наименование юридического лица
+          example: НСПК
+          maxLength: 512
+        type:
+          type: string
+          description: Организационно-правовая форма юридического лица
+          minLength: 2
+          maxLength: 10
+          example: АО
+        inn:
+          type: string
+          description: Идентификационный номер налогоплательщика
+          minLength: 10
+          maxLength: 12
+          example: "7706812159"
+        ogrn:
+          type: string
+          description: Основной государственный регистрационный номер
+          minLength: 12
+          maxLength: 15
+          example: "1147746831352"
+        countryCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: Код страны-регистрации юридического лица, в формате "ISO 3166, Alpha-2"
+          example: RU
+        countrySubDivisionCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: Код региона-регистрации юридического лица
+          example: "45"
+        city:
+          type: string
+          description: Город
+          maxLength: 280
+          example: Москва
+        zip:
+          type: string
+          minLength: 6
+          maxLength: 6
+          description: Индекс
+          example: "115184"
+        address:
+          type: string
+          description: Юридический адрес
+          maxLength: 500
+          example: улица Большая Татарская, дом 11
+      required:
+        - agentId
+        - name
+        - inn
+        - ogrn
+        - countryCode
+      title: Данные зарегистрированного ЮЛ и ИП
+    LegalAccountDto:
+      type: object
+      properties:
+        internalLegalEntityId:
+          type: integer
+          format: int32
+          description: Внутренний идентификатор ЮЛ
+        memberId:
+          type: string
+          minLength: 12
+          maxLength: 12
+          description: Идентификатор банка-участника СБП
+          example: "100000000001"
+        account:
+          type: string
+          minLength: 20
+          maxLength: 20
+          description: Счет юридического лица
+          example: "40702810100010000001"
+      required:
+        - memberId
+        - account
+        - internalLegalEntityId
+      title: Данные регистрируемого банковского счета
+    LegalAccountList:
+      type: array
+      items:
+        $ref: "#/components/schemas/LegalAccountForList"
+      title: Получение списка банковских счетов для юр. лица
+    LegalAccountForList:
+      allOf:
+        - $ref: '#/components/schemas/LegalAccountDto'
+        - type: object
+          required:
+            - rootCause
+          properties:
+            internalAccountId:
+              type: integer
+              format: int32
+              description: Внутренний идентификатор банковского счета
+    LegalAccountResultOk:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Код ответа на запрос
+          maxLength: 7
+          example: RM00000
+        message:
+          type: string
+          description: Описание кода ответа на запрос
+          maxLength: 255
+          example: Запрос обработан успешно
+        data:
+          $ref: "#/components/schemas/LegalAccountResultData"
+      required:
+        - code
+        - message
+        - data
+      title: Успешный ответ на запрос регистрации счета юр. лица
+    LegalAccountResultBad:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Код ответа на запрос
+          maxLength: 7
+        message:
+          type: string
+          description: Описание кода ответа на запрос
+          maxLength: 255
+        data:
+          nullable: true
+      required:
+        - code
+        - message
+      title: Неуспешный ответ на запрос регистрации счета юр.лица
+    LegalAccountResultData:
+      type: object
+      properties:
+        account:
+          type: string
+          description: Зарегистрированный счет в СБП
+          minLength: 20
+          maxLength: 20
+          example: "40702810100010000001"
+        status:
+          type: string
+          description: Статус регистрации счета юридического лица
+          enum:
+            - CREATED
+          example: CREATED
+      required:
+        - account
+        - status
+      title: Ответные данные на запрос регистрации счета юр. лица (блок data)
+    MerchantDto:
+      type: object
+      properties:
+        internalLegalEntityId:
+          type: integer
+          format: int32
+          description: Внутренний идентификатор ЮЛ
+        brandName:
+          type: string
+          maxLength: 35
+          description: Название ТСП (имя по вывеске)
+          example: Кофейня у Артема
+        mcc:
+          type: string
+          minLength: 4
+          maxLength: 4
+          description: MCC код
+          example: "4122"
+        countryCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: Код страны-регистрации ТСП, в формате "ISO 3166, Alpha-2"
+          example: RU
+        countrySubDivisionCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: Код региона-регистрации ТСП
+          example: "45"
+        city:
+          type: string
+          description: Город
+          maxLength: 140
+          example: Москва
+        zip:
+          type: string
+          minLength: 6
+          maxLength: 6
+          description: Индекс
+          example: "115184"
+        address:
+          type: string
+          description: Фактический адрес ТСП
+          maxLength: 140
+          example: улица Большая Татарская, дом 11
+        contactPhoneNumber:
+          type: string
+          description: Контактный номер телефона ТСП
+          minLength: 10
+          maxLength: 13
+          example: "79991234567"
+        capabilities:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: Поле зарезервировано под будущие изменения.
+      required:
+        - internalLegalEntityId
+        - brandName
+        - mcc
+        - countryCode
+        - countrySubDivisionCode
+        - city
+        - zip
+        - address
+      title: Данные регистрируемого ТСП
+    MerchantForList:
+      allOf:
+        - $ref: '#/components/schemas/MerchantDto'
+        - type: object
+          required:
+            - rootCause
+          properties:
+            internalMerchantId:
+              type: integer
+              format: int32
+              description: Внутренний идентификатор зарегистрированного ТСП в СБП
+    MerchantResultOk:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Код ответа на запрос
+          maxLength: 7
+          example: RM00000
+        message:
+          type: string
+          description: Описание кода ответа на запрос
+          maxLength: 255
+          example: Запрос обработан успешно
+        data:
+          $ref: "#/components/schemas/MerchantResultData"
+      required:
+        - code
+        - message
+        - data
+      title: Успешный ответ на запрос регистрации ТСП
+    MerchantResultBad:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Код ответа на запрос
+          maxLength: 7
+        message:
+          type: string
+          description: Описание кода ответа на запрос
+          maxLength: 255
+        data:
+          nullable: true
+      required:
+        - code
+        - message
+      title: Успешный ответ на запрос регистрации ТСП
+    MerchantResultData:
+      type: object
+      properties:
+        internalMerchantId:
+          type: integer
+          format: int32
+          description: Внутренний идентификатор зарегистрированного ТСП в СБП
+        merchantId:
+          type: string
+          description: Идентификатор зарегистрированного ТСП в СБП
+          minLength: 12
+          maxLength: 12
+          example: MF0000000001
+        status:
+          type: string
+          description: Статус регистрации ТСП
+          enum:
+            - CREATED
+          example: CREATED
+      required:
+        - merchantId
+        - status
+      title: Ответные данные на запрос регистрации ТСП (блок data)
+    MerchantShortDto:
+      type: object
+      properties:
+        internalMerchantId:
+          type: integer
+          format: int32
+          description: Внутренний идентификатор зарегистрированного ТСП в СБП
+        merchantId:
+          type: string
+          description: Идентификатор ТСП в СБП
+          minLength: 12
+          maxLength: 12
+          example: MR1234567890
+        brandName:
+          type: string
+          description: Название ТСП (имя по вывеске)
+          maxLength: 35
+          example: Кофейня у Артема
+        mcc:
+          type: string
+          description: MCC код
+          minLength: 4
+          maxLength: 4
+          example: "4122"
+        address:
+          type: string
+          description: Адрес ТСП
+          maxLength: 140
+          example: Москва, улица Большая Татарская, дом 11
+      required:
+        - status
+      title: Ответ на запрос данных юридического лица
+  parameters:
+    internalLegalEntityIdParam:
+      in: path
+      name: internalLegalEntityId
+      description: Внутренний идентификатор ЮЛ
+      required: true
+      schema:
+        type: integer
+        format: int32
+    agentIdParam:
+      in: query
+      name: agentId
+      required: true
+      description: Идентификатор Агента ТСП
+      schema:
+        type: string
+        minLength: 12
+        maxLength: 12
+        example: A00000000001
+    offsetParam:
+      in: query
+      name: offset
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      required: false
+      description: С какой строки вернуть результат
+    limitParam:
+      in: query
+      name: limit
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      required: false
+      description: Максимальное количество результатов
+    sortParam:
+      in: query
+      name: sort
+      schema:
+        type: string
+        maxLength: 256
+      required: false
+      description: По какому полю сортировать, по умолчанию сортируется по возрастанию, с указанием "-" (например, -id) сортируется по убыванию
