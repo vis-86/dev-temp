@@ -2,6 +2,10 @@ openapi: 3.0.0
 info:
   version: "1.0"
   title: Внешний API для "SBP GATE"
+  x-logo:
+    url: logo.png
+    backgroundColor: "#1B1537"
+    altText: SBP logo
 tags:
   - name: QRCode
     x-displayName: Работа с QR кодами
