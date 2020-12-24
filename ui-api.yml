@@ -33,31 +33,31 @@ info:
 
   title: Внутреннтй API для UI "SBP GATE"
 tags:
-  - name: LegalEntity
+  - name: UiLegalEntity
     x-displayName: Управление юридическими лицами
     description: |
       Методы API для регистрации в СБП Юридических лиц.
-  - name: LegalAccount
+  - name: UiLegalAccount
     x-displayName: Управление расчетными счетами юридических лиц
     description: >
       Методы API для регистрации в СБП расчетных счетов юридических лиц и ИП,
       куда будут переводиться деньги за совершенные операции в их ТСП.
-  - name: Merchant
+  - name: UiMerchant
     x-displayName: Управление ТСП
     description: >
       Методы API для регистрации в СБП ТСП. Доступны
       только по сертификатам Агентов ТСП.
 x-tagGroups:
-  - name: MerchantApi
+  - name: UiMerchantApi
     tags:
-      - LegalEntity
-      - LegalAccount
-      - Merchant
+      - UiLegalEntity
+      - UiLegalAccount
+      - UiMerchant
 paths:
   /api/v1/legal-entity:
     post:
       tags:
-        - LegalEntity
+        - UiLegalEntity
       summary: Регистрация юридического лица
       operationId: createLegalEntity
       requestBody:
@@ -83,7 +83,7 @@ paths:
   /api/v1/legal-entity/list:
     get:
       tags:
-        - LegalEntity
+        - UiLegalEntity
       summary: Получение списка юридических лиц
       operationId: listOfLegalEntity
       parameters:
@@ -107,7 +107,7 @@ paths:
   "/api/v1/legal-entity/registration/{internalLegalEntityId}":
     get:
       tags:
-        - LegalEntity
+        - UiLegalEntity
       summary: Запрос статуса регистрации юридического лица
       operationId: getStatusLegalEntity
       parameters:
@@ -134,7 +134,7 @@ paths:
   "/api/v1/legal-entity/registration/list":
     get:
       tags:
-        - LegalEntity
+        - UiLegalEntity
       summary: Запрос статуса регистрации юридического лица
       operationId: getStatusLegalEntityList
       parameters:
@@ -155,7 +155,7 @@ paths:
   "/api/v1/legal-entity/info/{internalLegalEntityId}":
     get:
       tags:
-        - LegalEntity
+        - UiLegalEntity
       summary: Запрос данных юридического лица
       description: >
         Доступен по сертификатам Агента ТСП и Участника
@@ -185,7 +185,7 @@ paths:
   /api/v1/legal-account:
     post:
       tags:
-        - LegalAccount
+        - UiLegalAccount
       summary: Регистрация расчетного счета юридического лица
       operationId: createLegalAccount
       requestBody:
@@ -217,7 +217,7 @@ paths:
   "/api/v1/legal-account/list/{internalLegalEntityId}":
     get:
       tags:
-        - LegalAccount
+        - UiLegalAccount
       summary: Запрос списка банковских счетов для юр. лица
       operationId: getLegalAccountList
       parameters:
@@ -238,7 +238,7 @@ paths:
   /api/v1/merchant:
     post:
       tags:
-        - Merchant
+        - UiMerchant
       summary: Регистрация ТСП
       operationId: createMerchant
       requestBody:
@@ -270,7 +270,7 @@ paths:
   "/api/v1/merchant/info/{internalMerchantId}":
     get:
       tags:
-        - Merchant
+        - UiMerchant
       summary: Запрос данных ТСП
       description: >
         Доступен по сертификатам Агента ТСП и Участника
@@ -300,7 +300,7 @@ paths:
   "/api/v1/merchant/list/{internalLegalEntityId}":
     get:
       tags:
-        - Merchant
+        - UiMerchant
       summary: Запрос списка ТСП для юр. лица
       operationId: getMerchantList
       parameters:

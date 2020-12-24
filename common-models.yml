@@ -1,0 +1,21 @@
+Error400ResultData:
+  type: object
+  properties:
+    errorId:
+      type: string
+      format: uuid
+      description: Внутренний идентификатор ошибки
+    code:
+      type: string
+      description: Код ответа
+      maxLength: 7
+    message:
+      type: string
+      description: Описание кода ответа
+      maxLength: 255
+    data:
+      nullable: true
+  required:
+    - code
+    - message
+  title: Стандартный ответ на код ошибки 400

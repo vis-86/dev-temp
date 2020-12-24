@@ -1,0 +1,661 @@
+openapi: 3.0.0
+info:
+  version: "1.0"
+  title: Внешний API для "SBP GATE"
+tags:
+  - name: QRCode
+    x-displayName: Работа с QR кодами
+    description: |
+      Методы API для работы с QR кодами, а так же запрос статусов выполнения операций по ним.
+  - name: LegalEntity
+    x-displayName: Управление юридическими лицами
+    description: |
+      Методы API для регистрации в СБП Юридических лиц.
+  - name: LegalAccount
+    x-displayName: Управление расчетными счетами юридических лиц
+    description: >
+      Методы API для регистрации в СБП расчетных счетов юридических лиц и ИП,
+      куда будут переводиться деньги за совершенные операции в их ТСП.
+  - name: Merchant
+    x-displayName: Управление ТСП
+    description: >
+      Методы API для регистрации в СБП ТСП. Доступны
+      только по сертификатам Агентов ТСП.
+x-tagGroups:
+  - name: QRApi
+    tags:
+      - QRCode
+  - name: MerchantApi
+    tags:
+      - LegalEntity
+      - LegalAccount
+      - Merchant
+paths:
+  /api/payment/v1/qrc-data:
+    post:
+      tags:
+        - QRCode
+      summary: Регистрация QR-кода
+      operationId: registerQRCode
+      parameters:
+        - $ref: '#/components/parameters/mediaTypeParam'
+        - $ref: '#/components/parameters/widthParam'
+        - $ref: '#/components/parameters/heightParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QRCodeDto"
+        description: Данные запрашиваемого QR кода
+        required: true
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QRCodeResultDto"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+
+  /api/payment/v1/qrc-data/{qrcId}/payload:
+    get:
+      tags:
+        - QRCode
+      summary: Запрос payload для ранее зарегистрированного QR-кода
+      operationId: queryQRCodePayload
+      parameters:
+        - $ref: '#/components/parameters/qrcIdParam'
+        - $ref: '#/components/parameters/mediaTypeParam'
+        - $ref: '#/components/parameters/widthParam'
+        - $ref: '#/components/parameters/heightParam'
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QRCodeResultDto"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+
+  /api/payment/v1/qrc-data/{qrcId}/image:
+    get:
+      tags:
+        - QRCode
+      summary: Запрос изображения, ранее зарегистрированного QR кода
+      operationId: queryQRCodeImage
+      parameters:
+        - $ref: '#/components/parameters/mediaTypeHeader'
+        - $ref: '#/components/parameters/qrcIdParam'
+        - $ref: '#/components/parameters/widthParam'
+        - $ref: '#/components/parameters/heightParam'
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            '*/*':
+              schema:
+                type: file
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+
+  /api/payment/v1/qrc-status:
+    put:
+      tags:
+        - QRCode
+      summary: Запрос статуса операций по Dynamic QR кодам
+      operationId: queryQrCodesStatus
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QRCList"
+        description: Данные запрашиваемого QR кода
+        required: true
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QRCodesStatusesList"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+
+  /api/payment/v1/paymentdata/{qrcId}:
+    get:
+      tags:
+        - QRCode
+      summary: Метод API для запроса дополнительной информации по идентификатору QR кода.
+      operationId: queryQrCodeData
+      parameters:
+        - $ref: '#/components/parameters/qrcIdParam'
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QrCodeDataResponse"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+
+  /api/merchant/v1/legal-entity:
+    post:
+      tags:
+        - LegalEntity
+      summary: Регистрация юридического лица
+      operationId: createLegalEntity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "ui-api.yml#/components/schemas/LegalEntityDto"
+        description: Данные регистрируемого юридического лица
+        required: true
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "ui-api.yml#/components/schemas/LegalEntityResultOk"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+
+  "/api/merchant/v1/legal-entity/registration/{ticketId}":
+    get:
+      tags:
+        - LegalEntity
+      summary: Запрос статуса регистрации юридического лица
+      operationId: getStatusLegalEntity
+      parameters:
+        - name: ticketId
+          in: path
+          description: Временный регистрационный номер
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "ui-api.yml#/components/schemas/LegalTicketResultOk"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+
+  "/api/merchant/v1/legal-entity/info/{legalId}":
+    get:
+      tags:
+        - LegalEntity
+      summary: Запрос данных юридического лица
+      description: >
+        Доступен по сертификатам Агента ТСП и Участника
+        СБП.
+      operationId: getLegalData
+      parameters:
+        - name: legalId
+          in: path
+          description: Идентификатор юридического лица в СБП
+          required: true
+          schema:
+            type: string
+            minLength: 12
+            maxLength: 12
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "ui-api.yml#/components/schemas/LegalDataResultOk"
+        "400":
+          description: Юридическое лицо с указанным идентификатором не найдено
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+
+  /api/merchant/v1/legal-account:
+    post:
+      tags:
+        - LegalAccount
+      summary: Регистрация расчетного счета юридического лица
+      operationId: createLegalAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "ui-api.yml#/components/schemas/LegalAccountDto"
+        description: Данные регистрируемого банковского счета
+        required: true
+      responses:
+        "201":
+          description: Операция успешно выполнена
+          content:
+            application/json:
+              schema:
+                $ref: "ui-api.yml#/components/schemas/LegalAccountResultOk"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+        "422":
+          description: Некорректное значение параметра запроса
+          content:
+            application/json:
+              schema:
+                $ref: "ui-api.yml#/components/schemas/LegalAccountResultBad"
+
+  /api/merchant/v1/merchant:
+    post:
+      tags:
+        - Merchant
+      summary: Регистрация ТСП
+      operationId: createMerchant
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "ui-api.yml#/components/schemas/MerchantDto"
+        description: Данные регистрируемого ТСП
+        required: true
+      responses:
+        "201":
+          description: Операция успешно выполнена
+          content:
+            application/json:
+              schema:
+                $ref: "ui-api.yml#/components/schemas/MerchantResultOk"
+        "400":
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+        "422":
+          description: Некорректное значение параметра запроса
+          content:
+            application/json:
+              schema:
+                $ref: "ui-api.yml#/components/schemas/MerchantResultBad"
+  "/api/merchant/v1/merchant/info/{merchantId}":
+    get:
+      tags:
+        - Merchant
+      summary: Запрос данных ТСП
+      description: >
+        Доступен по сертификатам Агента ТСП и Участника
+        СБП.
+      operationId: getMerchantData
+      parameters:
+        - name: merchantId
+          in: path
+          description: Идентификатор ТСП в СБП
+          required: true
+          schema:
+            type: string
+            maxLength: 12
+            minLength: 12
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: "ui-api.yml#/components/schemas/MerchantDataResultOk"
+        "400":
+          description: Юридическое лицо с указанным идентификатором не найдено
+          content:
+            application/json:
+              schema:
+                $ref: "common-models.yml#/Error400ResultData"
+
+components:
+  schemas:
+    QRCodeDto:
+      type: object
+      properties:
+        memberId:
+          type: string
+          minLength: 12
+          maxLength: 12
+          description: Идентификатор банка-участника СБП
+          example: 100000000001
+        account:
+          type: string
+          minLength: 20
+          maxLength: 20
+          description: Счет юридического лица
+          example: 40702810100010000001
+        internalMerchantId:
+          type: integer
+        templateVersion:
+          type: string
+          enum: [ "01" ]
+          description: Версия payload QR кода (01 - Версия 1)
+          example: "01"
+        qrcType:
+          type: string
+          enum: [ "01", "02" ]
+          description: 01 - QR-Static, 02 - QR-Dynamic
+          example: "01"
+        amount:
+          type: integer
+          format: int64
+          description: Сумма в копейках. Целое, положительное число. Максимум 12 знаков. Поле обязательно для заполнения, если Тип QR = QR-Dynamic.
+          example: 10000
+        currency:
+          type: string
+          enum: [ RUB ]
+          description: Валюта операции (RUB - Российский рубль)
+          example: RUB
+        paymentPurpose:
+          type: string
+          maxLength: 140
+          description: Дополнительная информация от ТСП (Additional Information)
+          example: string
+      required:
+        - agentId
+        - memberId
+        - account
+        - internalMerchantId
+        - templateVersion
+        - qrcType
+
+    QRCodeResultDto:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 7
+          description: Код ответа на запрос
+          example: RQ00000
+        message:
+          type: string
+          maxLength: 255
+          description: Описание кода ответа на запрос
+          example: Запрос обработан успешно
+        data:
+          $ref: '#/components/schemas/QRCodeResultData'
+      required:
+        - code
+        - message
+        - data
+
+    QRCodeResultData:
+      type: object
+      properties:
+        qrcId:
+          type: string
+          maxLength: 32
+          description: Идентификатор зарегистрированного QR кода в СБП
+          example: AS1000670LSS7DN18SJQDNP4B05KLJL2
+        payload:
+          type: string
+          maxLength: 999
+          description: Payload зарегистрированного QR кода в СБП
+          example: "https://qr.nspk.ru/AS1000670LSS7DN18SJQDNP4B05KLJL2?type=01&bank=100000000001&sum=10000&cur=RUB&crc=C08B"
+        status:
+          type: string
+          enum: [ CREATED ]
+        image:
+          $ref: '#/components/schemas/QRCodeResultDataImage'
+      required:
+        - qrcId
+        - payload
+        - status
+
+    QRCodeResultDataImage:
+      description: Объект QR картинки
+      type: object
+      properties:
+        mediaType:
+          type: string
+          enum: [ "image/png", "image/svg+xml" ]
+          description: Формат получаемого файла
+          example: "image/png"
+        content:
+          type: string
+          description: base64encoded image. Формат для декодирования зависит от mediaType
+          example: "iVBORw0KGgoAAAANSUhEUgAABEoAAARKCAIAAADXJAK3AAAABmJLR0QA/wD...YII="
+      required:
+        - mediaType
+        - content
+
+    QRCList:
+      description: Массив qrcId по которым нужно получить статус операции
+      type: object
+      properties:
+        qrcIds:
+          type: array
+          items:
+            type: string
+            example: AS1000670LSS7DN18SJQDNP4B05KLJL2
+          minItems: 1
+      required:
+        - qrcIds
+
+    QRCodesStatusesList:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 7
+          description: Код ответа на запрос
+        message:
+          type: string
+          maxLength: 255
+          description: Описание кода ответа на запрос
+        data:
+          description: Массив статусов операций по QR кодам
+          type: array
+          items:
+            $ref: '#/components/schemas/QRCodeStatusDto'
+      required:
+        - code
+        - message
+        - data
+
+    QRCodeStatusDto:
+      type: object
+      properties:
+        qrcId:
+          type: string
+          maxLength: 32
+          description: Идентификатор QR кода, запрос по которому проводился
+        code:
+          type: string
+          maxLength: 7
+          description: Код ответа на запрос статуса QR кода
+        message:
+          type: string
+          maxLength: 255
+          description: Описание кода ответа на запрос
+        status:
+          type: string
+          enum: [ NTST, RCVD, ACTC, ACWP, RJCT ]
+          description: Статус операции, инициированной Dynamic QR кодом
+        trxId:
+          type: string
+          maxLength: 32
+          description: Идентификатор операции, инициированной Dynamic QR кодом
+      required:
+        - qrcId
+        - code
+        - message
+
+    QrCodeDataResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 7
+          description: Код ответа на запрос
+          example: RQ00000
+        message:
+          type: string
+          maxLength: 255
+          description: Описание кода ответа на запрос
+          example: Запрос обработан успешно
+        data:
+          $ref: '#/components/schemas/QrCodeData'
+      required:
+        - code
+        - message
+
+    QrCodeData:
+      type: object
+      properties:
+        qrcId:
+          type: string
+          maxLength: 32
+          description: Идентификатор QR кода, запрос по которому проводился
+          example: AS1000670LSS7DN18SJQDNP4B05KLJL2
+        qrcType:
+          type: string
+          enum: [ "01", "02" ]
+          example: "01"
+        amount:
+          type: string
+          description: Сумма в копейках.Поле обязательно, если Тип QR = QR-Dynamic.
+          maxLength: 12
+          example: "1000"
+        currency:
+          type: string
+          enum: [ RUB ]
+          description: "Валюта операции: RUB - Российский рубль. Поле обязательно, если заполнена сумма."
+          example: RUB
+        paymentPurpose:
+          type: string
+          maxLength: 140
+          description: Дополнительная информация от ТСП (Additional Information)
+          example: "string"
+        legalName:
+          type: string
+          maxLength: 140
+          description: Сокращенное наименование юридического лица
+          example: "АО НСПК"
+        brandName:
+          type: string
+          maxLength: 32
+          description: Название ТСП (имя по вывеске)
+          example: Кофейня у Артема
+        address:
+          type: string
+          maxLength: 140
+          description: Фактический адрес ТСП
+          example: "улица Большая Татарская, дом 11"
+        memberId:
+          type: string
+          minLength: 12
+          maxLength: 12
+          description: Идентификатор банка-участника СБП
+          example: "100000000001"
+        crc:
+          type: string
+          minLength: 4
+          maxLength: 4
+          description: Значение контрольной суммы payload
+          example: C08B
+        mcc:
+          type: string
+          minLength: 4
+          maxLength: 4
+          description: MCC код
+          example: 4122
+      required:
+        - qrcId
+        - qrcType
+        - legalName
+        - brandName
+        - address
+        - memberId
+        - crc
+
+  parameters:
+    mediaTypeParam:
+      in: query
+      name: mediaType
+      required: false
+      description: Опциональное получение QR-картинки
+      schema:
+        type: string
+        enum: [ "image/png", "image/svg+xml" ]
+    mediaTypeHeader:
+      in: header
+      name: mediaType
+      required: true
+      schema:
+        type: string
+        default: "image/png"
+        enum: [ "image/png", "image/svg+xml" ]
+    widthParam:
+      in: query
+      name: width
+      required: false
+      description: Ширина изображения
+      schema:
+        type: integer
+        minimum: 200
+        default: 300
+    heightParam:
+      in: query
+      name: height
+      required: false
+      description: Высота изображения
+      schema:
+        type: integer
+        minimum: 200
+        default: 300
+    qrcIdParam:
+      in: path
+      name: qrcId
+      required: true
+      description: Идентификатор зарегистрированного QR кода в СБП
+      schema:
+        type: string
+        maxLength: 32
+    agentIdParam:
+      in: query
+      name: agentId
+      required: true
+      description: Идентификатор Агента ТСП
+      schema:
+        type: string
+        minLength: 12
+        maxLength: 12
+        example: A00000000001
